@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1F3864">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PM Pedidos">
+<title>📦 PM Pedidos</title>
+<style>
+  :root{
+    --primary:#1F3864;
+    --green:#27AE60;
+    --red:#E74C3C;
+    --orange:#F39C12;
+    --bg:#f0f2f5;
+    --card-bg:#ffffff;
+    --text:#222;
+    --muted:#777;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  #app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);}
+  .hidden{display:none !important;}
+
+  /* Topbar */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--primary);color:#fff;
+    display:flex;align-items:center;gap:8px;
+    padding:14px 12px;padding-top:calc(14px + env(safe-area-inset-top));
+  }
+  .topbar h1{font-size:17px;margin:0;flex:1;font-weight:600;}
+  .icon-btn{
+    background:rgba(255,255,255,0.15);border:none;color:#fff;
+    width:36px;height:36px;border-radius:10px;font-size:17px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .icon-btn:active{background:rgba(255,255,255,0.3);}
+
+  main{flex:1;padding:16px;padding-bottom:96px;}
+
+  .screen h2{color:var(--primary);margin-top:4px;}
+
+  /* Home */
+  #screen-home{text-align:center;padding-top:12vh;}
+  #screen-home h1{color:var(--primary);font-size:26px;margin-bottom:36px;}
+  .role-btn{
+    display:block;width:100%;padding:18px;margin-bottom:16px;
+    border:none;border-radius:16px;color:#fff;font-size:17px;font-weight:600;
+    cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.12);
+  }
+  .role-btn.green{background:var(--green);}
+  .role-btn.red{background:var(--red);}
+  .role-btn.orange{background:var(--orange);}
+  .role-btn.blue{background:var(--primary);}
+  .role-btn.purple{background:#8E44AD;}
+  .role-btn:active{transform:scale(0.98);}
+
+  /* Lists of buttons (vendedor select) */
+  .list-buttons{display:flex;flex-direction:column;gap:10px;}
+  .list-btn{
+    background:var(--card-bg);border:2px solid transparent;border-radius:14px;
+    padding:16px;font-size:16px;font-weight:600;color:var(--primary);
+    cursor:pointer;text-align:left;box-shadow:0 2px 6px rgba(0,0,0,0.06);
+  }
+  .list-btn:active{border-color:var(--primary);}
+
+  /* Tabs */
+  .tabs{display:flex;gap:6px;margin-bottom:14px;background:#e4e7ec;padding:4px;border-radius:12px;}
+  .tab{
+    flex:1;border:none;background:transparent;padding:10px 4px;border-radius:9px;
+    font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;
+  }
+  .tab.active{background:var(--card-bg);color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+
+  /* Cards */
+  .pedido-list{display:flex;flex-direction:column;gap:12px;}
+  .pedido-card{
+    background:var(--card-bg);border-radius:16px;padding:14px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.07);cursor:pointer;position:relative;
+  }
+  .pedido-card.modificado{border:2px solid var(--red);}
+  .badge-modificado{
+    display:inline-block;background:var(--red);color:#fff;font-size:11px;font-weight:700;
+    padding:3px 8px;border-radius:8px;margin-bottom:8px;
+  }
+  .card-header{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .card-header strong{font-size:16px;}
+  .badge{font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px;color:#fff;white-space:nowrap;}
+  .estado-PENDIENTE{background:var(--orange);}
+  .estado-APROBADO{background:var(--green);}
+  .estado-ARMADO{background:var(--primary);}
+  .estado-ENTREGADO{background:#5b8266;}
+  .estado-RECHAZADO{background:var(--red);}
+  .card-sub{color:var(--muted);font-size:13px;margin-top:6px;}
+  .card-detail{margin-top:12px;border-top:1px solid #eee;padding-top:12px;font-size:14px;}
+  .card-detail p{margin:4px 0;}
+  .card-detail .label{color:var(--muted);font-weight:600;}
+  .card-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .empty-state{text-align:center;color:var(--muted);padding:40px 10px;font-size:15px;}
+
+  /* Buttons */
+  .btn{
+    border:none;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;
+    color:#fff;cursor:pointer;background:var(--primary);
+  }
+  .btn.small{padding:8px 12px;font-size:13px;}
+  .btn.green{background:var(--green);}
+  .btn.red{background:var(--red);}
+  .btn.orange{background:var(--orange);}
+  .btn.primary{background:var(--primary);}
+  .btn.block{display:block;width:100%;}
+  .btn:active{opacity:0.85;}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+  .input-field{
+    width:100%;padding:11px;border:1px solid #ddd;border-radius:10px;font-size:15px;
+    background:#fff;font-family:inherit;margin-top:10px;
+  }
+
+  /* FAB */
+  .fab{
+    position:fixed;bottom:28px;left:50%;transform:translateX(calc(-50% + 168px));
+    width:58px;height:58px;border-radius:50%;background:var(--primary);color:#fff;
+    font-size:26px;border:none;box-shadow:0 6px 16px rgba(0,0,0,0.25);cursor:pointer;z-index:15;
+  }
+  @media(max-width:480px){
+    .fab{transform:none;right:20px;left:auto;bottom:calc(24px + env(safe-area-inset-bottom));}
+  }
+
+  /* Form */
+  form label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 5px;}
+  form input, form select, form textarea{
+    width:100%;padding:11px;border:1px solid #ddd;border-radius:10px;font-size:15px;
+    background:#fff;font-family:inherit;
+  }
+  form input:read-only{background:#f2f2f2;color:#666;}
+  form textarea{min-height:70px;resize:vertical;}
+  form h3{margin-top:22px;color:var(--primary);border-top:2px solid #eee;padding-top:16px;}
+  form label.label-red{color:var(--red);font-weight:800;}
+  .field-group{background:#f7f8fa;padding:10px 12px;border-radius:12px;margin-top:10px;}
+  .submit-row{margin-top:24px;}
+  .error{color:var(--red);font-size:13px;margin-top:8px;}
+
+  /* Admin login */
+  #screen-admin-login{padding-top:15vh;text-align:center;}
+
+  /* Etiqueta */
+  .etiqueta{background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  .etiqueta h2{margin-top:0;}
+  .etiqueta hr{border:none;border-top:1px dashed #ccc;margin:14px 0;}
+  .etiqueta .row{display:flex;justify-content:space-between;font-size:14px;margin:4px 0;}
+  .etiqueta .section-title{font-weight:700;color:var(--primary);margin:12px 0 6px;font-size:14px;}
+  .etiqueta-linea1{font-weight:800;font-size:17px;margin-bottom:2px;}
+  .etiqueta-linea2{font-size:13px;color:var(--muted);margin-bottom:10px;}
+  .cambio-devuelve{color:var(--red);font-weight:700;}
+  .alert-box{
+    background:#fdecea;border:2px solid var(--red);color:var(--red);border-radius:12px;
+    padding:14px;font-weight:700;text-align:center;margin-bottom:14px;
+  }
+  .alert-box.success{background:#eafaf0;border-color:var(--green);color:var(--green);}
+  .etiqueta-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px;}
+
+  .qr-wrap{text-align:center;margin:14px 0;}
+  .qr-img{width:130px;height:130px;}
+
+  #qr-reader{width:100%;border-radius:12px;overflow:hidden;background:#000;margin-bottom:16px;}
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.5);
+    display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;
+  }
+  .modal-box{background:#fff;border-radius:16px;padding:18px;width:100%;max-width:380px;}
+  .modal-box h3{margin-top:0;color:var(--primary);font-size:16px;}
+  .modal-box textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;font-size:15px;font-family:inherit;resize:vertical;}
+  .modal-actions{display:flex;gap:10px;margin-top:14px;}
+  .modal-actions button{flex:1;}
+
+  @media print{
+    body *{visibility:hidden;}
+    #screen-etiqueta, #screen-etiqueta *{visibility:visible;}
+    #screen-etiqueta{position:absolute;top:0;left:0;width:100%;padding:0;margin:0;background:#fff;}
+    .no-print{display:none !important;}
+    .etiqueta{box-shadow:none;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar no-print hidden" id="topbar">
+    <button class="icon-btn" id="btnBack">←</button>
+    <h1 id="topbarTitle">PM Pedidos</h1>
+    <button class="icon-btn hidden" id="btnLogout">🚪</button>
+  </header>
+
+  <main id="main">
+
+    <!-- HOME -->
+    <section class="screen" id="screen-home">
+      <h1>📦 PM Pedidos</h1>
+      <button class="role-btn green" data-role="vendedor">🧑‍💼 Soy Vendedor</button>
+      <button class="role-btn red" data-role="admin">🔐 Admin (Mateo)</button>
+      <button class="role-btn orange" data-role="deposito">🏭 Depósito</button>
+      <button class="role-btn blue" data-role="armado">🛠️ Armado</button>
+      <button class="role-btn purple" data-role="imprimir">🖨️ Pedidos para Imprimir</button>
+    </section>
+
+    <!-- VENDEDOR: seleccionar nombre -->
+    <section class="screen hidden" id="screen-vendedor-select">
+      <h2>👤 ¿Quién sos?</h2>
+      <div class="list-buttons" id="vendedorListBtns"></div>
+    </section>
+
+    <!-- VENDEDOR: lista de pedidos -->
+    <section class="screen hidden" id="screen-vendedor-list">
+      <div class="tabs" id="vendedorTabs">
+        <button class="tab active" data-tab="PENDIENTE">⏳ Pendientes</button>
+        <button class="tab" data-tab="APROBADO">✅ Aprobados</button>
+        <button class="tab" data-tab="TODOS">📋 Todos</button>
+      </div>
+      <div class="pedido-list" id="vendedorPedidos"></div>
+    </section>
+    <button class="fab no-print hidden" id="btnNuevoPedido">➕</button>
+
+    <!-- VENDEDOR: formulario nuevo/modificar -->
+    <section class="screen hidden" id="screen-vendedor-form">
+      <h2 id="formTitle">🆕 Nuevo Pedido</h2>
+      <form id="pedidoForm">
+        <label>Vendedor</label>
+        <input type="text" id="fVendedor" readonly>
+
+        <label>🚚 Método de envío *</label>
+        <select id="fMetodo" required>
+          <option value="">Seleccionar...</option>
+          <option value="VIA CARGO">🚚 Vía Cargo</option>
+          <option value="CORREO">📮 Correo</option>
+          <option value="TRANSPORTE">🚛 Transporte</option>
+          <option value="MOTOMENSAJERIA">🏍️ Motomensajería</option>
+          <option value="RETIRO POR LOCAL">🏬 Retiro por local</option>
+        </select>
+
+        <div class="field-group hidden" id="grupoEnvioDatos">
+          <label>DNI *</label>
+          <input type="text" id="fDni">
+          <label>CP *</label>
+          <input type="text" id="fCp">
+          <label>Ciudad *</label>
+          <input type="text" id="fCiudad">
+        </div>
+
+        <div class="field-group hidden" id="grupoMoto">
+          <label>Dirección</label>
+          <input type="text" id="fDireccion">
+          <label>Localidad</label>
+          <input type="text" id="fLocalidad">
+          <label>Entre calles</label>
+          <input type="text" id="fEntreCalles">
+          <label>Notas de entrega</label>
+          <textarea id="fNotasEntrega"></textarea>
+        </div>
+
+        <label>🙋 Nombre del cliente *</label>
+        <input type="text" id="fCliente" required>
+
+        <label>📞 Teléfono *</label>
+        <input type="tel" id="fTelefono" required>
+
+        <label>🛒 Detalle del pedido *</label>
+        <textarea id="fDetalle" required></textarea>
+
+        <label>📝 Nota para Mateo (opcional)</label>
+        <textarea id="fNotaMateo"></textarea>
+
+        <h3>💰 Pago</h3>
+        <label class="label-red">CAMBIO DEVUELVE</label>
+        <textarea id="fCambioDevuelve" placeholder="Productos que devuelve el cliente (si corresponde)"></textarea>
+        <label>Seña</label>
+        <input type="number" id="fSenia" min="0" step="0.01">
+        <label>Resta a abonar</label>
+        <input type="number" id="fResta" min="0" step="0.01">
+        <label>Monto abonado</label>
+        <input type="number" id="fMontoAbonado" min="0" step="0.01">
+        <label>Cuenta donde pagó</label>
+        <input type="text" id="fCuenta" placeholder="Ej: Mercado Pago, Efectivo...">
+
+        <div class="field-group hidden" id="grupoModificacion">
+          <label>✏️ ¿Qué cambió el cliente? *</label>
+          <textarea id="fNotaModificacion"></textarea>
+        </div>
+
+        <div class="submit-row">
+          <button type="submit" class="btn primary block">✅ Guardar Pedido</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ADMIN: login -->
+    <section class="screen hidden" id="screen-admin-login">
+      <h2 id="adminLoginTitle">🔐 Acceso Admin</h2>
+      <input type="password" id="adminPassword" class="input-field" placeholder="Contraseña">
+      <div class="submit-row">
+        <button class="btn red block" id="btnAdminEnter">Ingresar</button>
+      </div>
+      <p class="error hidden" id="adminError">❌ Contraseña incorrecta</p>
+    </section>
+
+    <!-- ADMIN: lista -->
+    <section class="screen hidden" id="screen-admin-list">
+      <div class="tabs" id="adminTabs">
+        <button class="tab active" data-tab="PENDIENTE">⏳ Pendientes</button>
+        <button class="tab" data-tab="APROBADO">✅ Aprobados</button>
+        <button class="tab" data-tab="TODOS">📋 Todos</button>
+      </div>
+      <div class="pedido-list" id="adminPedidos"></div>
+    </section>
+
+    <!-- DEPOSITO: lista -->
+    <section class="screen hidden" id="screen-deposito-list">
+      <div class="tabs" id="depositoTabs">
+        <button class="tab active" data-tab="APROBADO">📦 Para Armar</button>
+        <button class="tab" data-tab="ARMADO">✅ Pedidos Armados</button>
+      </div>
+      <div class="pedido-list" id="depositoPedidos"></div>
+    </section>
+
+    <!-- ETIQUETA -->
+    <section class="screen hidden" id="screen-etiqueta">
+      <div id="etiquetaContent"></div>
+    </section>
+
+    <!-- ARMADO: login empleados -->
+    <section class="screen hidden" id="screen-armado-login">
+      <h2>🛠️ ¿Quién sos?</h2>
+      <div class="list-buttons" id="armadoListBtns"></div>
+    </section>
+
+    <!-- ARMADO: contraseña -->
+    <section class="screen hidden" id="screen-armado-password">
+      <h2 id="armadoPasswordTitle">🔐 Contraseña</h2>
+      <input type="password" class="input-field" id="armadoPasswordInput" placeholder="Contraseña">
+      <div class="submit-row">
+        <button class="btn primary block" id="btnArmadoIngresar">Ingresar</button>
+      </div>
+      <p class="error hidden" id="armadoPasswordError">❌ Contraseña incorrecta</p>
+    </section>
+
+    <!-- ARMADO: home -->
+    <section class="screen hidden" id="screen-armado-home">
+      <h2 id="armadoHomeTitle">🛠️ Armado</h2>
+      <button class="btn primary block" id="btnEscanearPedido">📷 Escanear Pedido</button>
+    </section>
+
+    <!-- ARMADO: scanner -->
+    <section class="screen hidden" id="screen-armado-scanner">
+      <div id="qr-reader"></div>
+      <div id="armadoScanResult"></div>
+    </section>
+
+    <!-- PEDIDOS PARA IMPRIMIR -->
+    <section class="screen hidden" id="screen-imprimir-list">
+      <button class="btn primary block" id="btnDescargarPdfCombinado">⬇️ Descargar PDF combinado</button>
+      <div class="pedido-list" id="imprimirPedidos"></div>
+    </section>
+
+  </main>
+
+  <div class="modal-overlay hidden no-print" id="noteModalOverlay">
+    <div class="modal-box">
+      <h3 id="noteModalTitle"></h3>
+      <textarea id="noteModalTextarea" rows="4"></textarea>
+      <p class="error hidden" id="noteModalError">⚠️ Este campo es obligatorio</p>
+      <div class="modal-actions">
+        <button class="btn small" id="noteModalCancel">Cancelar</button>
+        <button class="btn small primary" id="noteModalConfirm">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ======================= CONFIG ======================= */
+  // Completá estos datos para usar Firebase Firestore en tiempo real.
+  // Si se dejan los placeholders "PEGA_TU_..." la app usa localStorage.
+  const firebaseConfig = {
+    apiKey: "PEGA_TU_API_KEY",
+    authDomain: "PEGA_TU_AUTH_DOMAIN",
+    projectId: "PEGA_TU_PROJECT_ID",
+    storageBucket: "PEGA_TU_STORAGE_BUCKET",
+    messagingSenderId: "PEGA_TU_SENDER_ID",
+    appId: "PEGA_TU_APP_ID"
+  };
+
+  const ADMIN_PASSWORD = "mateo123"; // gate simple del lado del cliente, no es seguridad real
+  const ADMIN_GATE_TITLES = {
+    adminList: "🔐 Acceso Admin",
+    depositoList: "🔐 Acceso Depósito",
+    imprimirList: "🔐 Acceso Pedidos para Imprimir",
+    armadoLogin: "🔐 Acceso Armado"
+  };
+  const LS_KEY = "pm_pedidos_data";
+  const CONTADOR_KEY = "pm_pedidos_contador";
+
+  const VENDEDORES = ["TOMY","FRANCO","MATIAS","LEANDRO","AGUSTINA","MARTINA","VICTORIA","SOFIA","CONI","ROCIO","TOMY JORGE","MEL"];
+
+  const METODOS_CON_DNI_CP = ["VIA CARGO","CORREO","TRANSPORTE"];
+
+  const ESTADO_EMOJI = {PENDIENTE:"⏳", APROBADO:"✅", ARMADO:"📦", ENTREGADO:"🚚", RECHAZADO:"❌"};
+  const METODO_EMOJI = {
+    "VIA CARGO":"🚚", "CORREO":"📮", "TRANSPORTE":"🚛",
+    "MOTOMENSAJERIA":"🏍️", "RETIRO POR LOCAL":"🏬"
+  };
+  const APROBADO_FAMILIA = ["APROBADO","ARMADO","ENTREGADO"];
+
+  const EMPLEADOS_ARMADO = {
+    FELIPE: "FELI123",
+    JUAN: "JUAN1011",
+    AZUL: "AZUL1213",
+    FEDE: "FEDE789",
+    NAHUEL: "NAHUE456"
+  };
+
+  const CDN_QRCODE_GENERATOR = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.js";
+  const CDN_HTML5_QRCODE = "https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js";
+  const CDN_JSPDF = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+
+  /* ======================= UTILS ======================= */
+  function escapeHtml(str){
+    return String(str==null?"":str).replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[s]));
+  }
+  function genId(){ return "p_" + Date.now() + "_" + Math.random().toString(36).slice(2,8); }
+  function money(n){ n = parseFloat(n)||0; return "$" + n.toLocaleString("es-AR"); }
+  function fecha(ts){ return ts ? new Date(ts).toLocaleString("es-AR",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}) : ""; }
+  function fechaCorta(ts){
+    if (!ts) return "";
+    const d = new Date(ts);
+    return d.getDate() + "/" + (d.getMonth()+1);
+  }
+
+  function nextLocalNumero(){
+    let n = parseInt(localStorage.getItem(CONTADOR_KEY) || "0", 10);
+    if (isNaN(n)) n = 0;
+    n += 1;
+    localStorage.setItem(CONTADOR_KEY, String(n));
+    return n;
+  }
+
+  function nextFirestoreNumero(){
+    const ref = DB._fsDb.collection("meta").doc("contadorPedidos");
+    return DB._fsDb.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const current = snap.exists ? (snap.data().valor || 0) : 0;
+      const next = current + 1;
+      tx.set(ref, {valor: next});
+      return next;
+    });
+  }
+
+  function showNotePrompt(title, required, onConfirm){
+    const overlay = $("#noteModalOverlay");
+    const textarea = $("#noteModalTextarea");
+    const errorEl = $("#noteModalError");
+    const confirmBtn = $("#noteModalConfirm");
+    const cancelBtn = $("#noteModalCancel");
+    $("#noteModalTitle").textContent = title;
+    textarea.value = "";
+    errorEl.classList.add("hidden");
+    overlay.classList.remove("hidden");
+
+    function cleanup(){
+      overlay.classList.add("hidden");
+      confirmBtn.removeEventListener("click", onConfirmClick);
+      cancelBtn.removeEventListener("click", onCancelClick);
+    }
+    function onConfirmClick(){
+      const val = textarea.value.trim();
+      if (required && !val){
+        errorEl.classList.remove("hidden");
+        return;
+      }
+      cleanup();
+      onConfirm(val);
+    }
+    function onCancelClick(){ cleanup(); }
+    confirmBtn.addEventListener("click", onConfirmClick);
+    cancelBtn.addEventListener("click", onCancelClick);
+  }
+
+  function loadScript(src){
+    return new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = src; s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  const _scriptPromises = {};
+  function ensureScript(key, src){
+    if (!_scriptPromises[key]) _scriptPromises[key] = loadScript(src);
+    return _scriptPromises[key];
+  }
+  function ensureQR(){ return ensureScript("qr", CDN_QRCODE_GENERATOR); }
+  function ensureJsPDF(){ return ensureScript("jspdf", CDN_JSPDF); }
+  function ensureHtml5Qrcode(){ return ensureScript("html5qrcode", CDN_HTML5_QRCODE); }
+
+  function qrDataURL(text, cellSize, margin){
+    cellSize = cellSize || 5;
+    margin = margin == null ? 8 : margin;
+    const qr = qrcode(0, "M");
+    qr.addData(text);
+    qr.make();
+    const count = qr.getModuleCount();
+    const size = count * cellSize + margin * 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = "#000000";
+    for (let row = 0; row < count; row++){
+      for (let col = 0; col < count; col++){
+        if (qr.isDark(row, col)){
+          ctx.fillRect(margin + col*cellSize, margin + row*cellSize, cellSize, cellSize);
+        }
+      }
+    }
+    return canvas.toDataURL("image/png");
+  }
+
+  /* ======================= DB (localStorage / Firestore) ======================= */
+  const DB = {
+    mode: "local",
+    _cb: null,
+    _cache: [],
+    _fsListenerSet: false,
+    _fsDb: null,
+
+    init(onReady){
+      const filled = Object.values(firebaseConfig).every(v => v && !String(v).startsWith("PEGA_TU"));
+      if (!filled){
+        this.mode = "local";
+        window.addEventListener("storage", (e) => { if (e.key === LS_KEY) this._emitLocal(); });
+        onReady();
+        return;
+      }
+      this.mode = "firestore";
+      loadScript("https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js")
+        .then(() => loadScript("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"))
+        .then(() => {
+          firebase.initializeApp(firebaseConfig);
+          this._fsDb = firebase.firestore();
+          onReady();
+        })
+        .catch(() => {
+          // fallback si falla la carga del SDK
+          this.mode = "local";
+          onReady();
+        });
+    },
+
+    _readLocal(){
+      try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
+      catch(e){ return []; }
+    },
+    _writeLocal(arr){
+      localStorage.setItem(LS_KEY, JSON.stringify(arr));
+      this._emitLocal();
+    },
+    _emitLocal(){
+      if (this._cb) this._cb(this._readLocal());
+    },
+
+    _ensureFirestoreListener(){
+      if (this._fsListenerSet) return;
+      this._fsListenerSet = true;
+      this._fsDb.collection("pedidos").orderBy("createdAt","desc").onSnapshot(snap => {
+        this._cache = snap.docs.map(d => Object.assign({id: d.id}, d.data()));
+        if (this._cb) this._cb(this._cache);
+      });
+    },
+
+    subscribe(cb){
+      this._cb = cb;
+      if (this.mode === "local"){
+        this._emitLocal();
+      } else {
+        this._ensureFirestoreListener();
+        cb(this._cache);
+      }
+    },
+
+    unsubscribe(){
+      this._cb = null;
+    },
+
+    add(pedido){
+      const now = Date.now();
+      pedido.createdAt = now;
+      pedido.updatedAt = now;
+      if (this.mode === "local"){
+        pedido.id = genId();
+        pedido.numero = nextLocalNumero();
+        const arr = this._readLocal();
+        arr.unshift(pedido);
+        this._writeLocal(arr);
+      } else {
+        nextFirestoreNumero().then(numero => {
+          pedido.numero = numero;
+          this._fsDb.collection("pedidos").add(pedido);
+        });
+      }
+    },
+
+    update(id, changes){
+      changes = Object.assign({}, changes, {updatedAt: Date.now()});
+      if (this.mode === "local"){
+        const arr = this._readLocal();
+        const idx = arr.findIndex(p => p.id === id);
+        if (idx >= 0) arr[idx] = Object.assign({}, arr[idx], changes);
+        this._writeLocal(arr);
+      } else {
+        this._fsDb.collection("pedidos").doc(id).update(changes);
+      }
+    }
+  };
+
+  /* ======================= STATE ======================= */
+  const state = {
+    currentVendedor: null,
+    adminAuthed: false,
+    currentEmpleado: null,
+    armadoTargetEmpleado: null,
+    armadoScanner: null,
+    adminGateTarget: "adminList",
+    vendedorTab: "PENDIENTE",
+    adminTab: "PENDIENTE",
+    depositoTab: "APROBADO",
+    formMode: "nuevo",
+    formEditingId: null,
+    etiquetaId: null
+  };
+  let screenStack = [];
+  let prevScreenName = null;
+  let imprimirCurrentList = [];
+
+  /* ======================= DOM REFS ======================= */
+  const $ = (sel) => document.querySelector(sel);
+  const topbar = $("#topbar");
+  const topbarTitle = $("#topbarTitle");
+  const btnBack = $("#btnBack");
+  const btnLogout = $("#btnLogout");
+  const fab = $("#btnNuevoPedido");
+
+  const screens = {
+    home: $("#screen-home"),
+    vendedorSelect: $("#screen-vendedor-select"),
+    vendedorList: $("#screen-vendedor-list"),
+    vendedorForm: $("#screen-vendedor-form"),
+    adminLogin: $("#screen-admin-login"),
+    adminList: $("#screen-admin-list"),
+    depositoList: $("#screen-deposito-list"),
+    etiqueta: $("#screen-etiqueta"),
+    armadoLogin: $("#screen-armado-login"),
+    armadoPassword: $("#screen-armado-password"),
+    armadoHome: $("#screen-armado-home"),
+    armadoScanner: $("#screen-armado-scanner"),
+    imprimirList: $("#screen-imprimir-list")
+  };
+
+  const SCREEN_CONFIG = {
+    home:          {title:"📦 PM Pedidos", showBack:false, showLogout:false, showFab:false},
+    vendedorSelect:{title:"👤 ¿Quién sos?", showBack:true, showLogout:false, showFab:false},
+    vendedorList:  {title:"🧑‍💼 Vendedor", showBack:true, showLogout:true, showFab:true},
+    vendedorForm:  {title:"🆕 Pedido", showBack:true, showLogout:false, showFab:false},
+    adminLogin:    {title:"🔐 Admin", showBack:true, showLogout:false, showFab:false},
+    adminList:     {title:"🔐 Admin (Mateo)", showBack:true, showLogout:true, showFab:false},
+    depositoList:  {title:"🏭 Depósito", showBack:true, showLogout:true, showFab:false},
+    etiqueta:      {title:"🏷️ Etiqueta", showBack:true, showLogout:false, showFab:false},
+    armadoLogin:   {title:"🛠️ ¿Quién sos?", showBack:true, showLogout:false, showFab:false},
+    armadoPassword:{title:"🔐 Contraseña", showBack:true, showLogout:false, showFab:false},
+    armadoHome:    {title:"🛠️ Armado", showBack:true, showLogout:true, showFab:false},
+    armadoScanner: {title:"📷 Escanear Pedido", showBack:true, showLogout:false, showFab:false},
+    imprimirList:  {title:"🖨️ Pedidos para Imprimir", showBack:true, showLogout:false, showFab:false}
+  };
+
+  function setScreen(name){
+    Object.values(screens).forEach(s => s.classList.add("hidden"));
+    screens[name].classList.remove("hidden");
+    const cfg = SCREEN_CONFIG[name];
+    topbar.classList.toggle("hidden", name === "home");
+    topbarTitle.textContent = cfg.title;
+    btnLogout.classList.toggle("hidden", !cfg.showLogout);
+    fab.classList.toggle("hidden", !cfg.showFab);
+  }
+
+  function goTo(name, opts){
+    screenStack.push({name, opts});
+    render(name, opts);
+  }
+  function goBack(){
+    screenStack.pop();
+    const prev = screenStack.pop();
+    if (prev) goTo(prev.name, prev.opts);
+    else goHome();
+  }
+  function goHome(){
+    screenStack = [];
+    state.currentVendedor = null;
+    state.adminAuthed = false;
+    state.currentEmpleado = null;
+    stopScanner();
+    goTo("home");
+  }
+
+  function render(name, opts){
+    opts = opts || {};
+    if (prevScreenName === "armadoScanner" && name !== "armadoScanner") stopScanner();
+    prevScreenName = name;
+    setScreen(name);
+    if (name === "home") renderHome();
+    else if (name === "vendedorSelect") renderVendedorSelect();
+    else if (name === "vendedorList") renderVendedorList();
+    else if (name === "vendedorForm") renderVendedorForm(opts);
+    else if (name === "adminLogin") renderAdminLogin(opts);
+    else if (name === "adminList") renderAdminList();
+    else if (name === "depositoList") renderDepositoList();
+    else if (name === "etiqueta") renderEtiqueta(opts);
+    else if (name === "armadoLogin") renderArmadoLogin();
+    else if (name === "armadoPassword") renderArmadoPassword(opts);
+    else if (name === "armadoHome") renderArmadoHome();
+    else if (name === "armadoScanner") renderArmadoScanner();
+    else if (name === "imprimirList") renderImprimirList();
+  }
+
+  /* ======================= HOME ======================= */
+  function renderHome(){}
+
+  /* ======================= VENDEDOR: seleccionar nombre ======================= */
+  function renderVendedorSelect(){
+    const cont = $("#vendedorListBtns");
+    cont.innerHTML = VENDEDORES.map(v =>
+      `<button class="list-btn" data-vendedor="${escapeHtml(v)}">🙋 ${escapeHtml(v)}</button>`
+    ).join("");
+  }
+
+  /* ======================= VENDEDOR: lista ======================= */
+  function filterByTab(list, tab){
+    if (tab === "PENDIENTE") return list.filter(p => p.estado === "PENDIENTE");
+    if (tab === "APROBADO") return list.filter(p => APROBADO_FAMILIA.includes(p.estado));
+    return list;
+  }
+  function sortPedidos(list){
+    return list.slice().sort((a,b) => {
+      const mod = (b.modificado?1:0) - (a.modificado?1:0);
+      if (mod !== 0) return mod;
+      return (b.createdAt||0) - (a.createdAt||0);
+    });
+  }
+
+  function pedidoDetailHTML(p){
+    let envio = "";
+    if (METODOS_CON_DNI_CP.includes(p.metodoEnvio)){
+      envio = `
+        <p><span class="label">DNI:</span> ${escapeHtml(p.dni)}</p>
+        <p><span class="label">CP:</span> ${escapeHtml(p.cp)}</p>
+        <p><span class="label">Ciudad:</span> ${escapeHtml(p.ciudad)}</p>`;
+    } else if (p.metodoEnvio === "MOTOMENSAJERIA"){
+      envio = `
+        <p><span class="label">Dirección:</span> ${escapeHtml(p.direccion)}</p>
+        <p><span class="label">Localidad:</span> ${escapeHtml(p.localidad)}</p>
+        <p><span class="label">Entre calles:</span> ${escapeHtml(p.entreCalles)}</p>
+        <p><span class="label">Notas de entrega:</span> ${escapeHtml(p.notasEntrega)}</p>`;
+    }
+    return `
+      <p><span class="label">Teléfono:</span> ${escapeHtml(p.telefono)}</p>
+      ${envio}
+      <p><span class="label">Detalle:</span> ${escapeHtml(p.detalle)}</p>
+      ${p.notaMateo ? `<p><span class="label">Nota para Mateo:</span> ${escapeHtml(p.notaMateo)}</p>` : ""}
+      ${p.cambioDevuelve ? `<p class="cambio-devuelve">CAMBIO DEVUELVE: ${escapeHtml(p.cambioDevuelve)}</p>` : ""}
+      <p><span class="label">Seña:</span> ${money(p.senia)} · <span class="label">Resta:</span> ${money(p.resta)} · <span class="label">Abonado:</span> ${money(p.montoAbonado)}</p>
+      ${p.cuenta ? `<p><span class="label">Cuenta:</span> ${escapeHtml(p.cuenta)}</p>` : ""}
+      ${p.notaModificacion ? `<p><span class="label">Último cambio:</span> ${escapeHtml(p.notaModificacion)}</p>` : ""}
+      ${p.notaAdmin ? `<p><span class="label">Nota de Mateo:</span> ${escapeHtml(p.notaAdmin)}</p>` : ""}
+      <p><span class="label">Creado:</span> ${fecha(p.createdAt)}</p>
+    `;
+  }
+
+  function cardHTML(p, actionsHTML){
+    return `
+      <div class="pedido-card ${p.modificado?"modificado":""}" data-id="${p.id}">
+        ${p.modificado ? '<div class="badge-modificado">🔴 MODIFICADO</div>' : ""}
+        <div class="card-header">
+          <strong>${p.numero ? "#" + p.numero + " · " : ""}${escapeHtml(p.cliente)}</strong>
+          <span class="badge estado-${p.estado}">${ESTADO_EMOJI[p.estado]||""} ${p.estado}</span>
+        </div>
+        <div class="card-sub">${METODO_EMOJI[p.metodoEnvio]||""} ${escapeHtml(p.metodoEnvio)} · 🧑‍💼 ${escapeHtml(p.vendedor)}${p.armadoPor ? " · 👷 " + escapeHtml(p.armadoPor) : ""}</div>
+        <div class="card-detail hidden">${pedidoDetailHTML(p)}</div>
+        <div class="card-actions">${actionsHTML||""}</div>
+      </div>`;
+  }
+
+  function attachCardToggle(container){
+    container.querySelectorAll(".pedido-card").forEach(card => {
+      card.addEventListener("click", (e) => {
+        if (e.target.closest("button")) return;
+        card.querySelector(".card-detail").classList.toggle("hidden");
+      });
+    });
+  }
+
+  function renderVendedorList(){
+    $("#vendedorTabs").querySelectorAll(".tab").forEach(t =>
+      t.classList.toggle("active", t.dataset.tab === state.vendedorTab)
+    );
+    DB.subscribe(all => {
+      const mine = all.filter(p => p.vendedor === state.currentVendedor);
+      const filtered = sortPedidos(filterByTab(mine, state.vendedorTab));
+      const cont = $("#vendedorPedidos");
+      if (!filtered.length){
+        cont.innerHTML = `<div class="empty-state">📭 No hay pedidos en esta categoría</div>`;
+        return;
+      }
+      cont.innerHTML = filtered.map(p => {
+        let actions = "";
+        if (p.estado === "APROBADO" || p.estado === "ARMADO"){
+          actions = `<button class="btn small orange" data-action="modificar">✏️ Modificar pedido</button>`;
+        }
+        return cardHTML(p, actions);
+      }).join("");
+      attachCardToggle(cont);
+      cont.querySelectorAll('[data-action="modificar"]').forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.closest(".pedido-card").dataset.id;
+          const pedido = all.find(x => x.id === id);
+          openForm("modificar", pedido);
+        });
+      });
+    });
+  }
+
+  /* ======================= VENDEDOR: formulario ======================= */
+  const form = $("#pedidoForm");
+  const fVendedor = $("#fVendedor");
+  const fMetodo = $("#fMetodo");
+  const grupoEnvioDatos = $("#grupoEnvioDatos");
+  const grupoMoto = $("#grupoMoto");
+  const fDni = $("#fDni"), fCp = $("#fCp"), fCiudad = $("#fCiudad");
+  const fDireccion = $("#fDireccion"), fLocalidad = $("#fLocalidad"), fEntreCalles = $("#fEntreCalles"), fNotasEntrega = $("#fNotasEntrega");
+  const fCliente = $("#fCliente"), fTelefono = $("#fTelefono");
+  const fDetalle = $("#fDetalle"), fNotaMateo = $("#fNotaMateo");
+  const fCambioDevuelve = $("#fCambioDevuelve");
+  const fSenia = $("#fSenia"), fResta = $("#fResta"), fMontoAbonado = $("#fMontoAbonado"), fCuenta = $("#fCuenta");
+  const grupoModificacion = $("#grupoModificacion");
+  const fNotaModificacion = $("#fNotaModificacion");
+
+  function updateMetodoGroups(){
+    const v = fMetodo.value;
+    const needsDniCp = METODOS_CON_DNI_CP.includes(v);
+    const needsMoto = v === "MOTOMENSAJERIA";
+    grupoEnvioDatos.classList.toggle("hidden", !needsDniCp);
+    grupoMoto.classList.toggle("hidden", !needsMoto);
+    fDni.required = needsDniCp; fCp.required = needsDniCp; fCiudad.required = needsDniCp;
+  }
+  fMetodo.addEventListener("change", updateMetodoGroups);
+
+  function resetForm(){
+    form.reset();
+    grupoEnvioDatos.classList.add("hidden");
+    grupoMoto.classList.add("hidden");
+    grupoModificacion.classList.add("hidden");
+    fNotaModificacion.required = false;
+  }
+
+  function openForm(mode, pedido){
+    state.formMode = mode;
+    state.formEditingId = pedido ? pedido.id : null;
+    goTo("vendedorForm", {mode, pedido});
+  }
+
+  function renderVendedorForm(opts){
+    resetForm();
+    const mode = opts.mode || "nuevo";
+    const pedido = opts.pedido;
+    $("#formTitle").textContent = mode === "nuevo" ? "🆕 Nuevo Pedido" : "✏️ Modificar Pedido";
+
+    if (mode === "nuevo"){
+      fVendedor.value = state.currentVendedor;
+    } else {
+      fVendedor.value = pedido.vendedor;
+      fMetodo.value = pedido.metodoEnvio;
+      updateMetodoGroups();
+      fDni.value = pedido.dni || "";
+      fCp.value = pedido.cp || "";
+      fCiudad.value = pedido.ciudad || "";
+      fDireccion.value = pedido.direccion || "";
+      fLocalidad.value = pedido.localidad || "";
+      fEntreCalles.value = pedido.entreCalles || "";
+      fNotasEntrega.value = pedido.notasEntrega || "";
+      fCliente.value = pedido.cliente || "";
+      fTelefono.value = pedido.telefono || "";
+      fDetalle.value = pedido.detalle || "";
+      fNotaMateo.value = pedido.notaMateo || "";
+      fCambioDevuelve.value = pedido.cambioDevuelve || "";
+      fSenia.value = pedido.senia || "";
+      fResta.value = pedido.resta || "";
+      fMontoAbonado.value = pedido.montoAbonado || "";
+      fCuenta.value = pedido.cuenta || "";
+      grupoModificacion.classList.remove("hidden");
+      fNotaModificacion.required = true;
+      fNotaModificacion.value = "";
+    }
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!form.checkValidity()){
+      form.reportValidity();
+      return;
+    }
+    const data = {
+      vendedor: fVendedor.value,
+      metodoEnvio: fMetodo.value,
+      dni: fDni.value.trim(),
+      cp: fCp.value.trim(),
+      ciudad: fCiudad.value.trim(),
+      direccion: fDireccion.value.trim(),
+      localidad: fLocalidad.value.trim(),
+      entreCalles: fEntreCalles.value.trim(),
+      notasEntrega: fNotasEntrega.value.trim(),
+      cliente: fCliente.value.trim(),
+      telefono: fTelefono.value.trim(),
+      detalle: fDetalle.value.trim(),
+      notaMateo: fNotaMateo.value.trim(),
+      cambioDevuelve: fCambioDevuelve.value.trim(),
+      senia: fSenia.value,
+      resta: fResta.value,
+      montoAbonado: fMontoAbonado.value,
+      cuenta: fCuenta.value.trim()
+    };
+
+    if (state.formMode === "nuevo"){
+      data.estado = "PENDIENTE";
+      data.modificado = false;
+      DB.add(data);
+    } else {
+      const nota = fNotaModificacion.value.trim();
+      if (!nota){
+        alert("⚠️ Contá qué cambió para avisar a Mateo y depósito.");
+        return;
+      }
+      data.estado = "PENDIENTE";
+      data.modificado = true;
+      data.notaModificacion = nota;
+      DB.update(state.formEditingId, data);
+    }
+    resetForm();
+    goBack();
+  });
+
+  /* ======================= ADMIN ======================= */
+  function renderAdminLogin(opts){
+    state.adminGateTarget = (opts && opts.target) || "adminList";
+    const titulo = ADMIN_GATE_TITLES[state.adminGateTarget] || "🔐 Acceso Admin";
+    $("#adminLoginTitle").textContent = titulo;
+    topbarTitle.textContent = titulo;
+    $("#adminPassword").value = "";
+    $("#adminError").classList.add("hidden");
+  }
+
+  $("#btnAdminEnter").addEventListener("click", () => {
+    const val = $("#adminPassword").value;
+    if (val === ADMIN_PASSWORD){
+      state.adminAuthed = true;
+      goTo(state.adminGateTarget || "adminList");
+    } else {
+      $("#adminError").classList.remove("hidden");
+    }
+  });
+
+  function renderAdminList(){
+    $("#adminTabs").querySelectorAll(".tab").forEach(t =>
+      t.classList.toggle("active", t.dataset.tab === state.adminTab)
+    );
+    DB.subscribe(all => {
+      const filtered = sortPedidos(filterByTab(all, state.adminTab));
+      const cont = $("#adminPedidos");
+      if (!filtered.length){
+        cont.innerHTML = `<div class="empty-state">📭 No hay pedidos en esta categoría</div>`;
+        return;
+      }
+      cont.innerHTML = filtered.map(p => {
+        let actions = "";
+        if (p.estado === "PENDIENTE"){
+          actions = `<button class="btn small green" data-action="aprobar">✅ Aprobar</button>
+                     <button class="btn small red" data-action="rechazar">❌ Rechazar</button>`;
+        } else if (p.estado === "APROBADO"){
+          actions = `<button class="btn small orange" data-action="armar">📦 Marcar ARMADO</button>`;
+        } else if (p.estado === "ARMADO"){
+          actions = `<button class="btn small primary" data-action="entregar">🚚 Marcar ENTREGADO</button>`;
+        }
+        return cardHTML(p, actions);
+      }).join("");
+      attachCardToggle(cont);
+
+      cont.querySelectorAll('[data-action="aprobar"]').forEach(btn => btn.addEventListener("click", () => {
+        const id = btn.closest(".pedido-card").dataset.id;
+        showNotePrompt("✅ Nota opcional para aprobar", false, (nota) => {
+          DB.update(id, {estado:"APROBADO", notaAdmin: nota});
+        });
+      }));
+      cont.querySelectorAll('[data-action="rechazar"]').forEach(btn => btn.addEventListener("click", () => {
+        const id = btn.closest(".pedido-card").dataset.id;
+        showNotePrompt("❌ Nota de rechazo (obligatoria)", true, (nota) => {
+          DB.update(id, {estado:"RECHAZADO", notaAdmin: nota});
+        });
+      }));
+      cont.querySelectorAll('[data-action="armar"]').forEach(btn => btn.addEventListener("click", () => {
+        const id = btn.closest(".pedido-card").dataset.id;
+        DB.update(id, {estado:"ARMADO"});
+      }));
+      cont.querySelectorAll('[data-action="entregar"]').forEach(btn => btn.addEventListener("click", () => {
+        const id = btn.closest(".pedido-card").dataset.id;
+        DB.update(id, {estado:"ENTREGADO"});
+      }));
+    });
+  }
+
+  /* ======================= DEPOSITO ======================= */
+  function renderDepositoList(){
+    $("#depositoTabs").querySelectorAll(".tab").forEach(t =>
+      t.classList.toggle("active", t.dataset.tab === state.depositoTab)
+    );
+    DB.subscribe(all => {
+      const estadoBuscado = state.depositoTab;
+      const filtered = sortPedidos(all.filter(p => p.estado === estadoBuscado));
+      const cont = $("#depositoPedidos");
+      if (!filtered.length){
+        cont.innerHTML = `<div class="empty-state">📭 No hay pedidos en esta categoría</div>`;
+        return;
+      }
+      cont.innerHTML = filtered.map(p => cardHTML(p, "")).join("");
+      cont.querySelectorAll(".pedido-card").forEach(card => {
+        card.addEventListener("click", () => {
+          goTo("etiqueta", {id: card.dataset.id});
+        });
+      });
+    });
+  }
+
+  /* ======================= ETIQUETA ======================= */
+  function renderEtiqueta(opts){
+    state.etiquetaId = opts.id;
+    const cont = $("#etiquetaContent");
+    cont.innerHTML = `<div class="empty-state">Cargando...</div>`;
+    ensureQR().then(() => {
+      DB.subscribe(all => {
+        const p = all.find(x => x.id === state.etiquetaId);
+        if (!p){
+          cont.innerHTML = `<div class="empty-state">Pedido no encontrado</div>`;
+          return;
+        }
+
+        let envio = "";
+        if (METODOS_CON_DNI_CP.includes(p.metodoEnvio)){
+          envio = `
+            <div class="row"><span>DNI</span><strong>${escapeHtml(p.dni)}</strong></div>
+            <div class="row"><span>CP</span><strong>${escapeHtml(p.cp)}</strong></div>
+            <div class="row"><span>Ciudad</span><strong>${escapeHtml(p.ciudad)}</strong></div>`;
+        } else if (p.metodoEnvio === "MOTOMENSAJERIA"){
+          envio = `
+            <div class="row"><span>Dirección</span><strong>${escapeHtml(p.direccion)}</strong></div>
+            <div class="row"><span>Localidad</span><strong>${escapeHtml(p.localidad)}</strong></div>
+            <div class="row"><span>Entre calles</span><strong>${escapeHtml(p.entreCalles)}</strong></div>
+            ${p.notasEntrega ? `<div class="row"><span>Notas</span><strong>${escapeHtml(p.notasEntrega)}</strong></div>` : ""}`;
+        }
+
+        const qrImg = qrDataURL("PMPED-" + p.id, 5, 8);
+
+        cont.innerHTML = `
+          ${p.modificado ? `
+            <div class="alert-box no-print">⚠️ TIRAR ETIQUETA ANTERIOR<br>Este pedido fue modificado por el vendedor</div>
+          ` : ""}
+          <div class="etiqueta">
+            <div class="etiqueta-linea1">${p.numero||""} ${escapeHtml(p.metodoEnvio)}</div>
+            <div class="etiqueta-linea2">${escapeHtml((p.vendedor||"").toUpperCase())} PM ${fechaCorta(p.createdAt)}</div>
+            <div class="qr-wrap"><img src="${qrImg}" alt="Código QR del pedido" class="qr-img"></div>
+            <div class="section-title">📦 Envío</div>
+            <div class="row"><span>Método</span><strong>${METODO_EMOJI[p.metodoEnvio]||""} ${escapeHtml(p.metodoEnvio)}</strong></div>
+            ${envio}
+            <hr>
+            <div class="section-title">🙋 Cliente</div>
+            <div class="row"><span>Nombre</span><strong>${escapeHtml(p.cliente)}</strong></div>
+            <div class="row"><span>Teléfono</span><strong>${escapeHtml(p.telefono)}</strong></div>
+            <div class="row"><span>Vendedor</span><strong>${escapeHtml(p.vendedor)}</strong></div>
+            <hr>
+            <div class="section-title">🛒 Detalle del pedido</div>
+            <p>${escapeHtml(p.detalle)}</p>
+            ${p.notaMateo ? `<p><em>Nota: ${escapeHtml(p.notaMateo)}</em></p>` : ""}
+            ${p.notaModificacion ? `<p><strong>Último cambio:</strong> ${escapeHtml(p.notaModificacion)}</p>` : ""}
+            <hr>
+            <div class="section-title">💰 Pago</div>
+            ${p.cambioDevuelve ? `<p class="cambio-devuelve">CAMBIO DEVUELVE: ${escapeHtml(p.cambioDevuelve)}</p>` : ""}
+            <div class="row"><span>Seña</span><strong>${money(p.senia)}</strong></div>
+            <div class="row"><span>Resta a abonar</span><strong>${money(p.resta)}</strong></div>
+            <div class="row"><span>Monto abonado</span><strong>${money(p.montoAbonado)}</strong></div>
+            ${p.cuenta ? `<div class="row"><span>Cuenta</span><strong>${escapeHtml(p.cuenta)}</strong></div>` : ""}
+          </div>
+          <div class="etiqueta-actions no-print">
+            <button class="btn primary block" id="btnImprimir">🖨️ Imprimir</button>
+            <button class="btn block" id="btnDescargarPDF">📄 Descargar PDF</button>
+            ${p.paraImprimir
+              ? `<button class="btn block" disabled>✅ Ya está en la cola de impresión</button>`
+              : `<button class="btn orange block" id="btnParaImprimir">🖨️ Confirmar para Imprimir</button>`}
+            ${p.estado === "APROBADO" ? `<button class="btn orange block" id="btnMarcarArmado">📦 Marcar como ARMADO</button>` : ""}
+            ${p.modificado ? `<button class="btn red block" id="btnConfirmarTirado">🗑️ Confirmar etiqueta anterior tirada</button>` : ""}
+          </div>
+        `;
+
+        $("#btnImprimir").addEventListener("click", () => window.print());
+
+        $("#btnDescargarPDF").addEventListener("click", () => {
+          ensureJsPDF().then(() => descargarPdfIndividual(p));
+        });
+
+        const btnParaImprimir = $("#btnParaImprimir");
+        if (btnParaImprimir) btnParaImprimir.addEventListener("click", () => {
+          DB.update(p.id, {paraImprimir:true});
+        });
+
+        const btnMarcarArmado = $("#btnMarcarArmado");
+        if (btnMarcarArmado) btnMarcarArmado.addEventListener("click", () => {
+          DB.update(p.id, {estado:"ARMADO"});
+          goBack();
+        });
+
+        const btnConfirmarTirado = $("#btnConfirmarTirado");
+        if (btnConfirmarTirado) btnConfirmarTirado.addEventListener("click", () => {
+          DB.update(p.id, {modificado:false});
+        });
+      });
+    });
+  }
+
+  /* ======================= PDF ======================= */
+  function addPedidoPdfPage(doc, p, isFirst){
+    if (!isFirst) doc.addPage();
+    const marginX = 15;
+    const maxWidth = 125;
+    let y = 20;
+
+    doc.setFontSize(16);
+    doc.setFont(undefined, "bold");
+    doc.text(`${p.numero||""} ${p.metodoEnvio||""}`.trim(), marginX, y);
+    doc.setFont(undefined, "normal");
+    y += 8;
+
+    doc.setFontSize(11);
+    doc.text(`${(p.vendedor||"").toUpperCase()} PM ${fechaCorta(p.createdAt)}`, marginX, y);
+    y += 10;
+
+    if (METODOS_CON_DNI_CP.includes(p.metodoEnvio)){
+      doc.text(`DNI: ${p.dni || "-"}`, marginX, y); y += 7;
+      doc.text(`CP: ${p.cp || "-"}`, marginX, y); y += 7;
+      doc.text(`Ciudad: ${p.ciudad || "-"}`, marginX, y); y += 7;
+    } else if (p.metodoEnvio === "MOTOMENSAJERIA"){
+      doc.text(`Direccion: ${p.direccion || "-"}`, marginX, y); y += 7;
+      doc.text(`Localidad: ${p.localidad || "-"}`, marginX, y); y += 7;
+      doc.text(`Entre calles: ${p.entreCalles || "-"}`, marginX, y); y += 7;
+      if (p.notasEntrega){
+        const lines = doc.splitTextToSize(`Notas de entrega: ${p.notasEntrega}`, maxWidth);
+        doc.text(lines, marginX, y); y += lines.length * 6;
+      }
+    }
+
+    y += 3;
+    doc.text(`Cliente: ${p.cliente || "-"}`, marginX, y); y += 7;
+    doc.text(`Telefono: ${p.telefono || "-"}`, marginX, y); y += 7;
+    doc.text(`Vendedor: ${p.vendedor || "-"}`, marginX, y); y += 10;
+
+    doc.text("Detalle del pedido:", marginX, y); y += 6;
+    const detalleLines = doc.splitTextToSize(p.detalle || "-", maxWidth);
+    doc.text(detalleLines, marginX, y); y += detalleLines.length * 6 + 4;
+
+    if (p.notaModificacion){
+      const lines = doc.splitTextToSize(`Ultimo cambio: ${p.notaModificacion}`, maxWidth);
+      doc.text(lines, marginX, y); y += lines.length * 6 + 4;
+    }
+
+    if (p.cambioDevuelve){
+      doc.setFont(undefined, "bold");
+      const lines = doc.splitTextToSize(`Cambio devuelve: ${p.cambioDevuelve}`, maxWidth);
+      doc.text(lines, marginX, y); y += lines.length * 6 + 4;
+      doc.setFont(undefined, "normal");
+    }
+
+    doc.text(`Sena: ${money(p.senia)}`, marginX, y); y += 7;
+    doc.text(`Resta a abonar: ${money(p.resta)}`, marginX, y); y += 7;
+    doc.text(`Monto abonado: ${money(p.montoAbonado)}`, marginX, y); y += 7;
+    if (p.cuenta){
+      doc.text(`Cuenta: ${p.cuenta}`, marginX, y); y += 7;
+    }
+
+    const qrImg = qrDataURL("PMPED-" + p.id, 8, 4);
+    doc.addImage(qrImg, "PNG", 150, 15, 40, 40);
+  }
+
+  function descargarPdfIndividual(p){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    addPedidoPdfPage(doc, p, true);
+    doc.save(`Pedido_${(p.cliente||"pedido").replace(/[^a-z0-9]+/gi,"_")}.pdf`);
+  }
+
+  function descargarPdfCombinado(pedidos){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    pedidos.forEach((p, i) => addPedidoPdfPage(doc, p, i === 0));
+    doc.save(`Pedidos_para_imprimir_${Date.now()}.pdf`);
+  }
+
+  /* ======================= PEDIDOS PARA IMPRIMIR ======================= */
+  function renderImprimirList(){
+    DB.subscribe(all => {
+      imprimirCurrentList = sortPedidos(all.filter(p => p.paraImprimir));
+      const cont = $("#imprimirPedidos");
+      $("#btnDescargarPdfCombinado").disabled = imprimirCurrentList.length === 0;
+      if (!imprimirCurrentList.length){
+        cont.innerHTML = `<div class="empty-state">📭 No hay pedidos en la cola de impresión</div>`;
+        return;
+      }
+      cont.innerHTML = imprimirCurrentList.map(p => cardHTML(p,
+        `<button class="btn small red" data-action="quitar">❌ Quitar de la cola</button>`
+      )).join("");
+      attachCardToggle(cont);
+      cont.querySelectorAll('[data-action="quitar"]').forEach(btn => btn.addEventListener("click", () => {
+        const id = btn.closest(".pedido-card").dataset.id;
+        DB.update(id, {paraImprimir:false});
+      }));
+    });
+  }
+
+  /* ======================= ARMADO ======================= */
+  function renderArmadoLogin(){
+    const cont = $("#armadoListBtns");
+    cont.innerHTML = Object.keys(EMPLEADOS_ARMADO).map(nombre =>
+      `<button class="list-btn" data-empleado="${escapeHtml(nombre)}">🧑‍🔧 ${escapeHtml(nombre)}</button>`
+    ).join("");
+  }
+
+  function renderArmadoPassword(opts){
+    state.armadoTargetEmpleado = opts.empleado;
+    $("#armadoPasswordTitle").textContent = `🔐 Contraseña de ${opts.empleado}`;
+    $("#armadoPasswordInput").value = "";
+    $("#armadoPasswordError").classList.add("hidden");
+  }
+
+  function renderArmadoHome(){
+    $("#armadoHomeTitle").textContent = `🛠️ Hola, ${state.currentEmpleado}`;
+  }
+
+  function stopScanner(){
+    if (state.armadoScanner){
+      const instance = state.armadoScanner;
+      state.armadoScanner = null;
+      instance.stop().then(() => instance.clear()).catch(() => {});
+    }
+  }
+
+  function startScanner(){
+    $("#armadoScanResult").innerHTML = "";
+    const instance = new Html5Qrcode("qr-reader");
+    state.armadoScanner = instance;
+    instance.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      onScanDecoded,
+      () => {}
+    ).catch(err => {
+      $("#armadoScanResult").innerHTML = `
+        <div class="alert-box">⚠️ No se pudo acceder a la cámara.<br>${escapeHtml(String(err))}</div>
+        <button class="btn primary block" id="btnReintentarCamara">🔄 Reintentar</button>
+      `;
+      $("#btnReintentarCamara").addEventListener("click", startScanner);
+    });
+  }
+
+  function onScanDecoded(decodedText){
+    stopScanner();
+    if (!decodedText || !decodedText.startsWith("PMPED-")){
+      renderArmadoAviso("Este código QR no corresponde a un pedido de PM Pedidos.");
+      return;
+    }
+    const id = decodedText.slice("PMPED-".length);
+    DB.subscribe(all => {
+      renderArmadoResult(all.find(x => x.id === id));
+    });
+  }
+
+  function renderArmadoAviso(msg){
+    $("#armadoScanResult").innerHTML = `
+      <div class="alert-box">⚠️ ${escapeHtml(msg)}</div>
+      <button class="btn primary block" id="btnEscanearOtro">🔄 Escanear otro</button>
+    `;
+    $("#btnEscanearOtro").addEventListener("click", startScanner);
+  }
+
+  function renderArmadoResult(p){
+    if (!p){
+      renderArmadoAviso("Pedido no encontrado.");
+      return;
+    }
+    if (p.estado !== "APROBADO"){
+      const mensajes = {
+        ARMADO: `Este pedido ya fue armado${p.armadoPor ? " por " + p.armadoPor : ""}.`,
+        ENTREGADO: "Este pedido ya fue entregado.",
+        PENDIENTE: "Este pedido está PENDIENTE de aprobación, todavía no se puede armar.",
+        RECHAZADO: "Este pedido fue RECHAZADO."
+      };
+      renderArmadoAviso(mensajes[p.estado] || "Este pedido no está disponible para armar.");
+      return;
+    }
+    const cont = $("#armadoScanResult");
+    cont.innerHTML = `
+      <div class="etiqueta">
+        <div class="section-title">🙋 Cliente</div>
+        <div class="row"><span>Nombre</span><strong>${escapeHtml(p.cliente)}</strong></div>
+        <div class="row"><span>Teléfono</span><strong>${escapeHtml(p.telefono)}</strong></div>
+        <div class="row"><span>Método</span><strong>${escapeHtml(p.metodoEnvio)}</strong></div>
+        <hr>
+        <div class="section-title">🛒 Detalle</div>
+        <p>${escapeHtml(p.detalle)}</p>
+      </div>
+      <div class="etiqueta-actions">
+        <button class="btn green block" id="btnConfirmarArmado">✅ Confirmar Armado</button>
+        <button class="btn block" id="btnEscanearOtro">🔄 Escanear otro</button>
+      </div>
+    `;
+    $("#btnConfirmarArmado").addEventListener("click", () => {
+      DB.update(p.id, {estado:"ARMADO", armadoPor: state.currentEmpleado});
+      DB.unsubscribe();
+      cont.innerHTML = `
+        <div class="alert-box success">✅ Pedido de ${escapeHtml(p.cliente)} marcado como ARMADO</div>
+        <button class="btn primary block" id="btnEscanearOtro">🔄 Escanear otro</button>
+      `;
+      $("#btnEscanearOtro").addEventListener("click", startScanner);
+    });
+    $("#btnEscanearOtro").addEventListener("click", startScanner);
+  }
+
+  function renderArmadoScanner(){
+    $("#armadoScanResult").innerHTML = `<div class="empty-state">Cargando cámara...</div>`;
+    ensureHtml5Qrcode().then(startScanner);
+  }
+
+  /* ======================= EVENTOS GLOBALES ======================= */
+  document.querySelectorAll(".role-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const role = btn.dataset.role;
+      if (role === "vendedor") goTo("vendedorSelect");
+      else if (role === "admin") goTo("adminLogin", {target:"adminList"});
+      else if (role === "deposito") goTo("adminLogin", {target:"depositoList"});
+      else if (role === "armado") goTo("adminLogin", {target:"armadoLogin"});
+      else if (role === "imprimir") goTo("adminLogin", {target:"imprimirList"});
+    });
+  });
+
+  $("#vendedorListBtns").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-vendedor]");
+    if (!btn) return;
+    state.currentVendedor = btn.dataset.vendedor;
+    goTo("vendedorList");
+  });
+
+  $("#vendedorTabs").addEventListener("click", (e) => {
+    const btn = e.target.closest(".tab");
+    if (!btn) return;
+    state.vendedorTab = btn.dataset.tab;
+    renderVendedorList();
+  });
+  $("#adminTabs").addEventListener("click", (e) => {
+    const btn = e.target.closest(".tab");
+    if (!btn) return;
+    state.adminTab = btn.dataset.tab;
+    renderAdminList();
+  });
+  $("#depositoTabs").addEventListener("click", (e) => {
+    const btn = e.target.closest(".tab");
+    if (!btn) return;
+    state.depositoTab = btn.dataset.tab;
+    renderDepositoList();
+  });
+
+  $("#armadoListBtns").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-empleado]");
+    if (!btn) return;
+    goTo("armadoPassword", {empleado: btn.dataset.empleado});
+  });
+
+  $("#btnArmadoIngresar").addEventListener("click", () => {
+    const val = $("#armadoPasswordInput").value;
+    const nombre = state.armadoTargetEmpleado;
+    if (nombre && EMPLEADOS_ARMADO[nombre] === val){
+      state.currentEmpleado = nombre;
+      goTo("armadoHome");
+    } else {
+      $("#armadoPasswordError").classList.remove("hidden");
+    }
+  });
+
+  $("#btnEscanearPedido").addEventListener("click", () => goTo("armadoScanner"));
+
+  $("#btnDescargarPdfCombinado").addEventListener("click", () => {
+    if (!imprimirCurrentList.length){
+      alert("📭 No hay pedidos en la cola de impresión.");
+      return;
+    }
+    ensureJsPDF().then(() => ensureQR()).then(() => {
+      descargarPdfCombinado(imprimirCurrentList);
+    });
+  });
+
+  fab.addEventListener("click", () => openForm("nuevo", null));
+
+  btnBack.addEventListener("click", goBack);
+  btnLogout.addEventListener("click", goHome);
+
+  /* ======================= INIT ======================= */
+  DB.init(() => {
+    goTo("home");
+  });
+})();
+</script>
+</body>
+</html>
